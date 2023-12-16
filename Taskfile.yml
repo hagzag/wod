@@ -1,0 +1,119 @@
+version: '3'
+
+vars:
+  CYAN: tput setaf 6
+  RED: tput setaf 1
+  YELLOW: tput setaf 3
+  GREEN: tput setaf 2
+  BLUE: tput setaf 1
+  PURPLE: tput setaf 5
+  BG_B: tput setab 0
+  BOLD: tput bold
+  RESET: tput sgr0
+  CLEAR: tput reset
+  INT_REGISTRY: registry.localhost:5002
+  PATH_ERROR: is not installed or correctly configured in PATH.
+  ENV: local
+
+dotenv: [ '.env' ]
+
+# silent: true
+
+tasks:
+
+  ghr-docker-login:
+    interactive: true
+    
+    env:
+      CR_PAT: $GITHUB_TOKEN
+    cmds:
+    -  echo please run printf '%s' $CR_PAT | docker login ghcr.io -u $GITHUB_USER --password-stdin
+
+  get-eks-context:
+    env:
+      KUBECONFIG: '{{.USER_WORKING_DIR}}/config.yml'
+    generates:
+      - '{{.USER_WORKING_DIR}}/config.yml'
+    cmds:
+      - aws eks update-kubeconfig --name '{{ .CLUSTER_NAME }}' --region '{{ .AWS_REGION }}' --profile '{{ .AWS_PROFILE }}'
+
+  run-api-local:
+    desc: Build the Python - api / master application
+    dir: '{{.USER_WORKING_DIR}}'
+    env:
+      KUBECONFIG: '{{.USER_WORKING_DIR}}/config.yml'
+      # KUBE_NAMESPACE: keda-poc
+    cmds:
+      - poetry install --no-root
+      - poetry env info
+      - poetry run uvicorn src.api.main:app --port 9090 
+  
+  run-worker-local:
+    desc: Build the Python - worker application
+    cmds:
+      - poetry install --no-root
+      - poetry env info
+      - poetry run uvicorn src.worker.main:app --port 8080 --reload 
+
+  docker-build:
+    desc: Build a Docker container
+    cmds:
+      - docker build -t '{{.VENDOR_NAME}}/{{.PROJECT_NAME}}:{{.VERSION}}' .
+ 
+  helm_deploy_demo_app:
+    # internal: true
+    desc: install demo_app
+    cmds:
+      - helm dependency update --skip-refresh ./helm/wod
+      - helm upgrade keda-poc --install --debug --namespace keda-poc --create-namespace ./deploy/helm
+  
+  port_forward_demo_app:
+    desc: port-forward to demo_app
+    cmds:
+      - kubectl port-forward -n keda-poc svc/api 8000:80 -n keda-poc
+
+  port_forward_monitor:
+    desc: port-forward to prometheus
+    cmds:
+      - kubectl port-forward -n keda-poc svc/prometheus-server 9000:80
+
+  launch_demo:
+    internal: true
+    desc: run-demo
+    cmds:
+      - task: run-api-local
+
+  # utils
+  clear:
+    internal: true
+    cmds:
+      - sleep 0.1 && {{.CLEAR}}
+
+  default:
+    cmds:
+      - task: clear
+      - task: launch_demo
+
+  # gh-auth-login:
+  #   interactive: true
+  #   cmds:
+  #     - gh auth login 
+
+  kubefirst-start-github:
+    # deps:
+    #   - gh-auth-login``
+    # vars:
+    #   GITHUB_TOKEN: $GITHUB_TOKEN
+    desc: run kubefirst platform with github provider
+    cmds:
+      - kubefirst k3d create --cluster-name {{ .CLUSTER_NAME }}
+  
+  kubefirst-start-github-aws:
+    # deps:
+    #   - gh-auth-login``
+    # vars:
+    #   GITHUB_TOKEN: $GITHUB_TOKEN
+    desc: run kubefirst platform with github provider
+    cmds:
+      - kubefirst aws create --cluster-name {{ .CLUSTER_NAME }}
+  

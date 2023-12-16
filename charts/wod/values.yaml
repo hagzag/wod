@@ -1,0 +1,52 @@
+# Default values for wrapper.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  image:
+    repository: ghcr.io/hagzag/wod
+    tag: v1.0.0
+
+api:
+  enabled: true
+  fullnameOverride: api
+  service:
+    enabled: true
+    port: 9090
+
+  args:
+  - poetry
+  - run
+  - uvicorn
+  - src.api.main:app
+  - --host
+  - 0.0.0.0
+  - --port
+  - 9090
+
+worker:
+  enabled: true
+  fullnameOverride: worker
+  service:
+    enabled: true
+    port: 9090
+
+  args:
+  - poetry
+  - run
+  - uvicorn
+  - src.worker.main:app
+  - --host
+  - 0.0.0.0
+  - --port
+  - 8080
+
+metrics-server:
+  enabled: false
+
+keda:
+  enabled: false
+
+prometheus:
+  enabled: false
+

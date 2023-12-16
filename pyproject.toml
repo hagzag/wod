@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "wod"
+version = "0.1.0"
+description = "An exmaple app which manages a deployment based on a certian label"
+authors = ["Haggai Philip Zagury <hagzag@tikalk.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+uvicorn = "^0.24.0.post1"
+fastapi = "^0.104.1"
+kubernetes = "^28.1.0"
+starlette-prometheus = "^0.9.0"
+prometheus-fastapi-instrumentator = "^6.1.0"
+
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

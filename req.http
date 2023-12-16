@@ -1,0 +1,79 @@
+# used with vscode rest-client https://open-vsx.org/extension/humao/rest-client
+
+### API
+
+###
+# get replica count
+###
+GET http://localhost:9090/workers/available?label_selector=app.kubernetes.io/managed-by=Helm HTTP/1.1
+content-type: text/plain
+
+###
+# get /liveness
+###
+GET http://localhost:9090/liveness HTTP/1.1
+content-type: text/plain
+
+###
+# get /readiness
+###
+GET http://localhost:9090/readiness HTTP/1.1
+content-type: text/plain
+
+###
+# get replica count
+###
+GET http://localhost:9090/workers/available?label_selector=app.kubernetes.io/managed-by=Helm HTTP/1.1
+content-type: text/plain
+
+###
+# get replica count
+###
+GET http://localhost:9090/workers/available?app.kubernetes.io/instance=keda-poc HTTP/1.1
+content-type: text/plain
+
+
+###
+# get (GET) replica count via `/scale` 
+###
+GET http://localhost:9090/scaleJson HTTP/1.1
+content-type: 
+
+
+###
+# get (GET) replica count via `/scale` 
+###
+GET http://localhost:9090/scale HTTP/1.1
+content-type: text/plain
+
+### WORKER
+
+###
+# healthcheck
+###
+GET http://localhost:8080/health HTTP/1.1
+content-type: application/json
+
+###
+# fastapi metrics
+###
+GET http://localhost:8080/metrics HTTP/1.1
+content-type: application/json
+
+###
+# get replica count
+###
+GET http://localhost:8080/jobs/get HTTP/1.1
+content-type: application/json
+
+###
+# set job replica count e.g. `count=5&action=set`
+###
+POST http://localhost:8080/jobs/set?count=5&action=set HTTP/1.1
+content-type: application/json
+
+###
+# increase job replica count e.g. `count=10&action=increase`
+###
+POST http://localhost:8080/jobs/set?count=10&action=increase HTTP/1.1
+content-type: application/json

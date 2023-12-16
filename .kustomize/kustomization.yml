@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ns.yaml
+- api-deployment.yaml
+- api-service.yaml
+- worker-deployment.yaml
+
+namespace: wod
+
+images: []
+# - name: docker.io/hagzag/keda-py
+#   newName: ghcr.io/hagzag/keda-poc
+#   newTag: v1.4.0
+#   newTag: latest-main@sha256:7f87485b8308a864fe6fc9def69efb2758539f9b98286d5040383e06f9f3fa03
