@@ -1,28 +1,22 @@
-# src/dp/kubernetes.py
-import os
 from kubernetes import client, config
+from kubernetes.client.rest import ApiException
+from fastapi import HTTPException
+import os
 import logging
 
 def load_kubernetes_config():
     try:
-        # Check if KUBECONFIG environment variable is set
-        kube_config_path = os.getenv('KUBECONFIG')
-        if kube_config_path:
-            config.load_kube_config(config_file=kube_config_path)
-        else:
-            # Fallback to default ~/.kube/config
+        if os.getenv('KUBECONFIG'):
+            # Outside Kubernetes cluster
             config.load_kube_config()
+        else:
+            # Inside Kubernetes cluster
+            config.load_incluster_config()
     except Exception as e:
         logging.error(f"Error loading Kubernetes config: {e}")
         raise
 
-def check_readiness():
-    load_kubernetes_config()
-    v1 = client.CoreV1Api()
-    v1.list_namespace()
-    return {"status": "ready"}
-
-def list_workers(label_selector: str):
+def get_kubernetes_deployments(label_selector: str):
     load_kubernetes_config()
     v1 = client.AppsV1Api()
 
@@ -32,11 +26,18 @@ def list_workers(label_selector: str):
     try:
         deployments = v1.list_namespaced_deployment(namespace, label_selector=label_selector)
         return [deployment.metadata.name for deployment in deployments.items]
-    except client.exceptions.ApiException as e:
+    except ApiException as e:
         logging.error(f"Error listing deployments: {e}")
         raise HTTPException(status_code=e.status, detail=str(e))
+    
+def check_readiness():
+    load_kubernetes_config()
+    v1 = client.CoreV1Api()
+    v1.list_namespace()
+    return {"status": "ready"}
 
-def scale_deployment(deployment_id, replicas):
+def scale_deployment(label_selector: str, desired_replicas: int):
+# def scale_deployment(deployment_id, replicas):
     load_kubernetes_config()
     v1 = client.AppsV1Api()
     namespace = config.list_kube_config_contexts()[1]['context']['namespace']

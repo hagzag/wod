@@ -1,6 +1,6 @@
 # src/dp/main.py
 from fastapi import FastAPI, HTTPException
-from .kubernetes import check_readiness, list_workers, scale_deployment
+from .kubernetes import check_readiness, get_kubernetes_deployments, scale_deployment
 from starlette_prometheus import PrometheusMiddleware, metrics
 
 app = FastAPI()
@@ -18,26 +18,23 @@ async def readiness():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/workers/available")
-async def workers_available(label_selector: str = "app.kubernetes.io/instance=keda-po"):
+# @app.get("/workers/available")
+# async def workers_available(label_selector: str = "unique-instance-id=worker-0"):
+
+@app.get("/workers/list")
+async def list_workers(label_selector: str = "unique-instance-id=worker-0"):
     try:
-        return list_workers(label_selector)
+        return get_kubernetes_deployments(label_selector)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/workers/{id}/activate")
-async def activate_worker(id: str):
-    try:
-        return scale_deployment(id, 1)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@app.post("/worker/activate")
+async def activate_worker(label_selector: str):
+    return scale_deployment(label_selector, 1)
 
-@app.post("/workers/{id}/deactivate")
-async def deactivate_worker(id: str):
-    try:
-        return scale_deployment(id, 0)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@app.post("/worker/deactivate")
+async def deactivate_worker(label_selector: str):
+    return scale_deployment(label_selector, 0)
 
 if __name__ == "__main__":
     import uvicorn

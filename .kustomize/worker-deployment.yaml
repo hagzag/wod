@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   labels:
     app: worker
+    unique-instance-id: worker-0
   name: worker
 spec:
   replicas: 0

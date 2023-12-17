@@ -14,6 +14,7 @@ spec:
       labels:
         app: api
     spec:
+      serviceAccountName: deployment-manager-sa
       containers:
       - image: ghcr.io/hagzag/wod:latest
         name: api

@@ -5,7 +5,8 @@
 ###
 # get replica count
 ###
-GET http://localhost:9090/workers/available?label_selector=app.kubernetes.io/managed-by=Helm HTTP/1.1
+# GET http://localhost:9090/workers/list?label_selector="app.kubernetes.io/managed-by=Helm" HTTP/1.1
+GET http://localhost:9090/workers/list?label_selector=app.kubernetes.io/managed-by=Helm HTTP/1.1
 content-type: text/plain
 
 ###
@@ -23,7 +24,7 @@ content-type: text/plain
 ###
 # get replica count
 ###
-GET http://localhost:9090/workers/available?label_selector=app.kubernetes.io/managed-by=Helm HTTP/1.1
+GET http://localhost:9090/workers/list?label_selector=app.kubernetes.io/managed-by=Helm HTTP/1.1
 content-type: text/plain
 
 ###
