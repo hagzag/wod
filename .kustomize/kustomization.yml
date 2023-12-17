@@ -12,7 +12,7 @@ namespace: wod
 
 images:
 - name: ghcr.io/hagzag/wod
-  newTag: v1.1.1
+  newTag: v1.2.0
 # - name: docker.io/hagzag/keda-py
 #   newName: ghcr.io/hagzag/keda-poc
 #   newTag: v1.4.0
