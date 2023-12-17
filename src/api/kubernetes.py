@@ -36,10 +36,10 @@ def get_kubernetes_deployments(label_selector: str):
         logging.error(f"Error listing deployments: {e}")
         raise HTTPException(status_code=e.status, detail=str(e))
 
-def scale_deployment(label_selector: str, desired_replicas: int):
+def scale_deployment(label_selector: str, desired_replicas: int = 1):
     load_kubernetes_config()
     v1 = client.AppsV1Api()
-    namespace = os.getenv('KUBE_NAMESPACE', 'default')
+    namespace = os.getenv('KUBE_NAMESPACE', 'wod')
 
     try:
         # Find deployments that match the label selector
@@ -47,6 +47,7 @@ def scale_deployment(label_selector: str, desired_replicas: int):
         if not deployments:
             return {"status": "no deployments found with the provided label selector"}
 
+        scaled_deployments = []
         for deployment in deployments:
             # Get current replica count
             current_replicas = deployment.spec.replicas
@@ -58,8 +59,12 @@ def scale_deployment(label_selector: str, desired_replicas: int):
             # Scale the deployment
             deployment.spec.replicas = desired_replicas
             v1.replace_namespaced_deployment(name=deployment.metadata.name, namespace=namespace, body=deployment)
+            scaled_deployments.append(deployment.metadata.name)
 
-        return {"status": "success updated"}
+        if not scaled_deployments:
+            return {"status": "success unchanged"}
+
+        return {"status": "success updated", "scaled_deployments": scaled_deployments}
     except ApiException as e:
         logging.error(f"Error scaling deployment: {e}")
         raise HTTPException(status_code=e.status, detail=str(e))
