@@ -11,8 +11,10 @@ metadata:
 rules:
 - apiGroups: ["apps", "extensions"]
   resources: ["deployments"]
-  verbs: ["get", "list", "watch", "update", "patch", ] # try without "delete", "create"]
-
+  verbs: ["get", "list", "watch", "update", "patch"] # try without "delete", "create"]
+# - apiGroups: [""]
+#   resources: ["deployments", "namespaces", "endpointslices", "pods"]
+#   verbs: ["list", "get", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -24,4 +26,26 @@ subjects:
 roleRef:
   kind: Role
   name: deployment-manager
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: namespace-listener
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["list", "get", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: namespace-listener-binding
+subjects:
+- kind: ServiceAccount
+  name: deployment-manager-sa
+  namespace: wod
+roleRef:
+  kind: ClusterRole
+  name: namespace-listener
   apiGroup: rbac.authorization.k8s.io

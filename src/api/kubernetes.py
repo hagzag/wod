@@ -16,12 +16,18 @@ def load_kubernetes_config():
         logging.error(f"Error loading Kubernetes config: {e}")
         raise
 
+def check_readiness():
+    load_kubernetes_config()
+    v1 = client.CoreV1Api()
+    v1.list_namespace()
+    return {"status": "ready"}
+
 def get_kubernetes_deployments(label_selector: str):
     load_kubernetes_config()
     v1 = client.AppsV1Api()
 
     # Use an environment variable for the namespace
-    namespace = os.getenv('KUBE_NAMESPACE', 'default')
+    namespace = os.getenv('KUBE_NAMESPACE', 'wod')
 
     try:
         deployments = v1.list_namespaced_deployment(namespace, label_selector=label_selector)
@@ -29,28 +35,31 @@ def get_kubernetes_deployments(label_selector: str):
     except ApiException as e:
         logging.error(f"Error listing deployments: {e}")
         raise HTTPException(status_code=e.status, detail=str(e))
-    
-def check_readiness():
-    load_kubernetes_config()
-    v1 = client.CoreV1Api()
-    v1.list_namespace()
-    return {"status": "ready"}
 
 def scale_deployment(label_selector: str, desired_replicas: int):
-# def scale_deployment(deployment_id, replicas):
     load_kubernetes_config()
     v1 = client.AppsV1Api()
-    namespace = config.list_kube_config_contexts()[1]['context']['namespace']
-    
-    # Get current deployment status
-    current_deployment = v1.read_namespaced_deployment(deployment_id, namespace)
-    current_replicas = current_deployment.spec.replicas
+    namespace = os.getenv('KUBE_NAMESPACE', 'default')
 
-    # Check if scaling is necessary
-    if current_replicas == replicas:
-        return {"status": "success unchanged"}
+    try:
+        # Find deployments that match the label selector
+        deployments = v1.list_namespaced_deployment(namespace, label_selector=label_selector).items
+        if not deployments:
+            return {"status": "no deployments found with the provided label selector"}
 
-    # Scale the deployment
-    body = {'spec': {'replicas': replicas}}
-    v1.patch_namespaced_deployment_scale(deployment_id, namespace, body)
-    return {"status": "success updated"}
+        for deployment in deployments:
+            # Get current replica count
+            current_replicas = deployment.spec.replicas
+
+            # Check if scaling is necessary
+            if current_replicas == desired_replicas:
+                continue  # Skip to the next deployment if no scaling is needed
+
+            # Scale the deployment
+            deployment.spec.replicas = desired_replicas
+            v1.replace_namespaced_deployment(name=deployment.metadata.name, namespace=namespace, body=deployment)
+
+        return {"status": "success updated"}
+    except ApiException as e:
+        logging.error(f"Error scaling deployment: {e}")
+        raise HTTPException(status_code=e.status, detail=str(e))

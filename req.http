@@ -6,8 +6,14 @@
 # get replica count
 ###
 # GET http://localhost:9090/workers/list?label_selector="app.kubernetes.io/managed-by=Helm" HTTP/1.1
-GET http://localhost:9090/workers/list?label_selector=app.kubernetes.io/managed-by=Helm HTTP/1.1
+GET http://localhost:9090/workers/list?label_selector=unique-instance-id=worker-0 HTTP/1.1
 content-type: text/plain
+
+###
+# post activate worker-0
+###
+POST http://localhost:9090/worker/activate?label_selector=unique-instance-id=worker-0 HTTP/1.1
+# content-type: text/plain
 
 ###
 # get /liveness
@@ -24,7 +30,7 @@ content-type: text/plain
 ###
 # get replica count
 ###
-GET http://localhost:9090/workers/list?label_selector=app.kubernetes.io/managed-by=Helm HTTP/1.1
+GET http://localhost:9090/workers/list?label_selector=unique-instance-id=worker-0 HTTP/1.1
 content-type: text/plain
 
 ###

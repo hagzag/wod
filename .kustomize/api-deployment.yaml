@@ -19,15 +19,18 @@ spec:
       - image: ghcr.io/hagzag/wod:latest
         name: api
         command: ["poetry", "run", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "9090"]
+        env:
+        - name: KUBE_NAMESPACE
+          value: wod
         ports:
         - name: http
           containerPort: 9090
         resources: {}
         livenessProbe:
           httpGet:
-            path: /health
+            path: /liveness
             port: http
         readinessProbe:
           httpGet:
-            path: /health
+            path: /rediness
             port: http
